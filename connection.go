@@ -13,14 +13,24 @@ import (
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
-var MapKeyAdderss map[string]string 
+var MapKeyAdderss map[string]string
 
-var MapUrlAddress map[string]string 
+var MapUrlAddress map[string]string
+
+var AddIp map[string]string
+
+func Protect(w http.ResponseWriter, r http.Request) {
+	IP := r.RemoteAddr()
+
+	AddIp[IP] = "211"
+
+}
 
 type Result struct {
-	Link   string //отвечает за URL, который поступил на форму
-	Code   string //это сформированная строка, которую мы сохраним в MAPe !КЛЮЧ!
-	Status string //будет заполняться в соответствии с  тем, какой результат будет.
+	Link     string //отвечает за URL, который поступил на форму
+	Code     string //это сформированная строка, которую мы сохраним в MAPe !КЛЮЧ!
+	Status   string //будет заполняться в соответствии с  тем, какой результат будет
+	AdressIp string
 }
 
 func shorting() string {
@@ -31,7 +41,7 @@ func shorting() string {
 	return "to/" + string(b)
 }
 
-func isValidUrl(token string) bool { 
+func isValidUrl(token string) bool {
 	_, err := url.ParseRequestURI(token)
 	if err != nil {
 		return false
@@ -47,7 +57,7 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 	templ, _ := template.ParseFiles("./templates/index.html")
 	result := Result{}
 	if r.Method == "POST" {
-		if LenStr(r.FormValue("s")) { 
+		if LenStr(r.FormValue("s")) {
 			result.Link = r.FormValue("s")
 			if !isValidUrl(result.Link) {
 				result.Status = "Ссылка имеет не правильный формат"
@@ -89,6 +99,7 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 			result.Code = ""
 		}
 	}
+	Protect(w, r)
 	templ.Execute(w, result)
 }
 
@@ -124,8 +135,6 @@ func NotFound(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, nil)
 }
 
-
-
 func main() {
 
 	MapUrlAddress = make(map[string]string) // инициализация МАРы. Без этого она будет пустой и выдаст ошибку
@@ -138,4 +147,3 @@ func main() {
 	http.ListenAndServe(":8000", router)
 
 }
-
